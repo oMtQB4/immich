@@ -648,6 +648,7 @@ export type CalendarHeatmapResponseDto = {
 };
 export type AlbumsResponse = {
     defaultAssetOrder: AssetOrder;
+    nestingSeparator: string;
 };
 export type CastResponse = {
     /** Whether Google Cast is enabled */
@@ -731,6 +732,7 @@ export type UserPreferencesResponseDto = {
 };
 export type AlbumsUpdate = {
     defaultAssetOrder?: AssetOrder;
+    nestingSeparator?: string;
 };
 export type AvatarUpdate = {
     color?: UserAvatarColor;

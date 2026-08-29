@@ -18,6 +18,7 @@
     showDateRange?: boolean;
     showItemCount?: boolean;
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
+    nestingSeparator?: string;
   }
 
   let {
@@ -27,6 +28,7 @@
     showDateRange = false,
     showItemCount = false,
     onShowContextMenu = undefined,
+    nestingSeparator = '',
   }: Props = $props();
 
   let isCollapsed = $derived(!!group && isAlbumGroupCollapsed($albumViewSettings, group.id));
@@ -71,6 +73,7 @@
         >
           <AlbumCard
             {album}
+            {nestingSeparator}
             {showOwner}
             {showDateRange}
             {showItemCount}

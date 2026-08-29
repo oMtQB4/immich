@@ -4,12 +4,13 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { handleError } from '$lib/utils/handle-error';
   import { AssetOrder, updateMyPreferences } from '@immich/sdk';
-  import { Button, Field, NumberInput, Select, Switch, toastManager } from '@immich/ui';
+  import { Button, Field, Input, NumberInput, Select, Switch, toastManager } from '@immich/ui';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
 
   // Albums
   let defaultAssetOrder = $state(authManager.preferences.albums?.defaultAssetOrder ?? AssetOrder.Desc);
+  let albumNestingSeparator = $state(authManager.preferences.albums?.nestingSeparator ?? '');
 
   // Folders
   let foldersEnabled = $state(authManager.preferences.folders?.enabled ?? false);
@@ -46,7 +47,7 @@
     try {
       const response = await updateMyPreferences({
         userPreferencesUpdateDto: {
-          albums: { defaultAssetOrder },
+          albums: { defaultAssetOrder, nestingSeparator: albumNestingSeparator.slice(0, 1) },
           folders: { enabled: foldersEnabled, sidebarWeb: foldersSidebar },
           memories: { enabled: memoriesEnabled, duration: memoriesDuration, sidebarWeb: memoriesSidebar },
           people: { enabled: peopleEnabled, sidebarWeb: peopleSidebar, minimumFaces: peopleMinFaces },
@@ -84,6 +85,10 @@
                 ]}
                 bind:value={defaultAssetOrder}
               />
+            </Field>
+
+            <Field label={$t('albums_nesting_separator')} description={$t('albums_nesting_separator_description')}>
+              <Input bind:value={albumNestingSeparator} type="text" maxlength={1} placeholder="/" />
             </Field>
           </div>
         </SettingAccordion>

@@ -28,7 +28,7 @@
   import { Route } from '$lib/route';
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { getTagActions } from '$lib/services/tag.service';
-  import { joinPaths, TreeNode } from '$lib/utils/tree-utils';
+  import { TreeNode } from '$lib/utils/tree-utils';
   import { getAllTags, type TagResponseDto } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Text } from '@immich/ui';
   import { mdiDotsVertical, mdiTag, mdiTagMultiple } from '@mdi/js';
@@ -48,7 +48,7 @@
   let timelineManager = $state<TimelineManager>() as TimelineManager;
   const options = $derived({ deferInit: !tag, tagId: tag?.id });
 
-  const handleNavigation = (tag: string) => navigateToView(joinPaths(data.path, tag));
+  const handleNavigation = (tag: TreeNode) => navigateToView(tag.path);
 
   const getLink = (path: string) => Route.tags({ path });
 
