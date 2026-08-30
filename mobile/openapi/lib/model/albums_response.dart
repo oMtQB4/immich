@@ -14,25 +14,32 @@ class AlbumsResponse {
   /// Returns a new [AlbumsResponse] instance.
   AlbumsResponse({
     required this.defaultAssetOrder,
+    required this.nestingSeparator,
   });
 
   AssetOrder defaultAssetOrder;
 
+  /// Character that splits album names into nested groups, empty to disable
+  String nestingSeparator;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is AlbumsResponse &&
-    other.defaultAssetOrder == defaultAssetOrder;
+    other.defaultAssetOrder == defaultAssetOrder &&
+    other.nestingSeparator == nestingSeparator;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (defaultAssetOrder.hashCode);
+    (defaultAssetOrder.hashCode) +
+    (nestingSeparator.hashCode);
 
   @override
-  String toString() => 'AlbumsResponse[defaultAssetOrder=$defaultAssetOrder]';
+  String toString() => 'AlbumsResponse[defaultAssetOrder=$defaultAssetOrder, nestingSeparator=$nestingSeparator]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'defaultAssetOrder'] = this.defaultAssetOrder;
+      json[r'nestingSeparator'] = this.nestingSeparator;
     return json;
   }
 
@@ -46,6 +53,7 @@ class AlbumsResponse {
 
       return AlbumsResponse(
         defaultAssetOrder: AssetOrder.fromJson(json[r'defaultAssetOrder'])!,
+        nestingSeparator: mapValueOfType<String>(json, r'nestingSeparator')!,
       );
     }
     return null;
@@ -94,6 +102,7 @@ class AlbumsResponse {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'defaultAssetOrder',
+    'nestingSeparator',
   };
 }
 

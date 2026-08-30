@@ -4,6 +4,7 @@ import { Sync } from 'factory.ts';
 export const preferencesFactory = Sync.makeFactory<UserPreferencesResponseDto>({
   albums: {
     defaultAssetOrder: AssetOrder.Desc,
+    nestingSeparator: '',
   },
   cast: {
     gCastEnabled: false,

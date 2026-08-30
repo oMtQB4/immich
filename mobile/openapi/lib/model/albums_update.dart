@@ -14,6 +14,7 @@ class AlbumsUpdate {
   /// Returns a new [AlbumsUpdate] instance.
   AlbumsUpdate({
     this.defaultAssetOrder = const Optional.absent(),
+    this.nestingSeparator = const Optional.absent(),
   });
 
   ///
@@ -24,23 +25,38 @@ class AlbumsUpdate {
   ///
   Optional<AssetOrder?> defaultAssetOrder;
 
+  /// Character that splits album names into nested groups, empty to disable
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  Optional<String?> nestingSeparator;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is AlbumsUpdate &&
-    other.defaultAssetOrder == defaultAssetOrder;
+    other.defaultAssetOrder == defaultAssetOrder &&
+    other.nestingSeparator == nestingSeparator;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (defaultAssetOrder == null ? 0 : defaultAssetOrder!.hashCode);
+    (defaultAssetOrder == null ? 0 : defaultAssetOrder!.hashCode) +
+    (nestingSeparator == null ? 0 : nestingSeparator!.hashCode);
 
   @override
-  String toString() => 'AlbumsUpdate[defaultAssetOrder=$defaultAssetOrder]';
+  String toString() => 'AlbumsUpdate[defaultAssetOrder=$defaultAssetOrder, nestingSeparator=$nestingSeparator]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     if (this.defaultAssetOrder.isPresent) {
       final value = this.defaultAssetOrder.value;
       json[r'defaultAssetOrder'] = value;
+    }
+    if (this.nestingSeparator.isPresent) {
+      final value = this.nestingSeparator.value;
+      json[r'nestingSeparator'] = value;
     }
     return json;
   }
@@ -55,6 +71,7 @@ class AlbumsUpdate {
 
       return AlbumsUpdate(
         defaultAssetOrder: json.containsKey(r'defaultAssetOrder') ? Optional.present(AssetOrder.fromJson(json[r'defaultAssetOrder'])) : const Optional.absent(),
+        nestingSeparator: json.containsKey(r'nestingSeparator') ? Optional.present(mapValueOfType<String>(json, r'nestingSeparator')) : const Optional.absent(),
       );
     }
     return null;

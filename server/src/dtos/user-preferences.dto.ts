@@ -3,9 +3,15 @@ import { AssetOrderSchema, UserAvatarColorSchema } from 'src/enum';
 import { UserPreferences } from 'src/types';
 import z from 'zod';
 
+const NestingSeparatorSchema = z
+  .string()
+  .max(1)
+  .describe('Character that splits album names into nested groups, empty to disable');
+
 const AlbumsUpdateSchema = z
   .object({
     defaultAssetOrder: AssetOrderSchema.optional(),
+    nestingSeparator: NestingSeparatorSchema.optional(),
   })
   .optional()
   .describe('Album preferences')
@@ -126,6 +132,7 @@ const UserPreferencesUpdateSchema = z
 const AlbumsResponseSchema = z
   .object({
     defaultAssetOrder: AssetOrderSchema,
+    nestingSeparator: NestingSeparatorSchema,
   })
   .meta({ id: 'AlbumsResponse' });
 

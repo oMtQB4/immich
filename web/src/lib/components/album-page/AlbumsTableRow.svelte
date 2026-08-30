@@ -5,6 +5,7 @@
   import { Route } from '$lib/route';
   import { locale } from '$lib/stores/preferences.store';
   import type { ContextMenuPosition } from '$lib/utils/context-menu';
+  import { getAlbumDisplayName } from '$lib/utils/tree-utils';
   import { AlbumUserRole, type AlbumResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiShareVariantOutline } from '@mdi/js';
@@ -13,9 +14,12 @@
   interface Props {
     album: AlbumResponseDto;
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
+    nestingSeparator?: string;
   }
 
-  let { album, onShowContextMenu = undefined }: Props = $props();
+  let { album, onShowContextMenu = undefined, nestingSeparator = '' }: Props = $props();
+
+  let displayName = $derived(getAlbumDisplayName(album.albumName, nestingSeparator));
 
   const showContextMenu = (position: ContextMenuPosition) => {
     onShowContextMenu?.(position, album);
@@ -37,7 +41,7 @@
   {oncontextmenu}
 >
   <td class="text-md w-8/12 items-center text-start text-ellipsis sm:w-4/12 md:w-4/12 xl:w-[30%] 2xl:w-[40%]">
-    {album.albumName}
+    {displayName}
     {#if album.shared}
       <Icon
         icon={mdiShareVariantOutline}

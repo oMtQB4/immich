@@ -28,7 +28,7 @@
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { foldersStore } from '$lib/stores/folders.svelte';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { joinPaths } from '$lib/utils/tree-utils';
+  import type { TreeNode } from '$lib/utils/tree-utils';
   import { ActionButton, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
   import { mdiDotsVertical, mdiFolder, mdiFolderHome, mdiFolderOutline, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
@@ -42,7 +42,7 @@
 
   const viewport: Viewport = $state({ width: 0, height: 0 });
 
-  const handleNavigateToFolder = (folderName: string) => navigateToView(joinPaths(data.tree.path, folderName));
+  const handleNavigateToFolder = (folder: TreeNode) => navigateToView(folder.path);
 
   const getLinkForPath = (path: string) => Route.folders({ path });
 

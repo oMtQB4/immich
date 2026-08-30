@@ -56,6 +56,7 @@ class Preferences {
   final AvatarColor userAvatarColor;
   final bool showSupportBadge;
   final int minimumFaces;
+  final String albumNestingSeparator;
 
   const Preferences({
     this.foldersEnabled = false,
@@ -67,6 +68,7 @@ class Preferences {
     this.userAvatarColor = AvatarColor.primary,
     this.showSupportBadge = true,
     this.minimumFaces = 3,
+    this.albumNestingSeparator = '',
   });
 
   Preferences copyWith({
@@ -79,6 +81,7 @@ class Preferences {
     AvatarColor? userAvatarColor,
     bool? showSupportBadge,
     int? minimumFaces,
+    String? albumNestingSeparator,
   }) {
     return Preferences(
       foldersEnabled: foldersEnabled ?? this.foldersEnabled,
@@ -90,6 +93,7 @@ class Preferences {
       userAvatarColor: userAvatarColor ?? this.userAvatarColor,
       showSupportBadge: showSupportBadge ?? this.showSupportBadge,
       minimumFaces: minimumFaces ?? this.minimumFaces,
+      albumNestingSeparator: albumNestingSeparator ?? this.albumNestingSeparator,
     );
   }
 
@@ -104,6 +108,7 @@ class Preferences {
     preferences["avatar-Color"] = userAvatarColor.value;
     preferences["purchase-ShowSupportBadge"] = showSupportBadge;
     preferences["minimumFaces"] = minimumFaces;
+    preferences["albums-NestingSeparator"] = albumNestingSeparator;
     return preferences;
   }
 
@@ -121,6 +126,7 @@ class Preferences {
       ),
       showSupportBadge: (map["purchase"] as Map<String, Object?>?)?["showSupportBadge"] as bool? ?? true,
       minimumFaces: (map["people"] as Map<String, Object?>?)?["minimumFaces"] as int? ?? 3,
+      albumNestingSeparator: (map["albums"] as Map<String, Object?>?)?["nestingSeparator"] as String? ?? '',
     );
   }
 
@@ -136,6 +142,7 @@ tagsEnabled: $tagsEnabled,
 userAvatarColor: $userAvatarColor,
 showSupportBadge: $showSupportBadge,
 minimumFaces: $minimumFaces,
+albumNestingSeparator: $albumNestingSeparator,
 }''';
   }
 
@@ -153,7 +160,8 @@ minimumFaces: $minimumFaces,
         other.tagsEnabled == tagsEnabled &&
         other.userAvatarColor == userAvatarColor &&
         other.showSupportBadge == showSupportBadge &&
-        other.minimumFaces == minimumFaces;
+        other.minimumFaces == minimumFaces &&
+        other.albumNestingSeparator == albumNestingSeparator;
   }
 
   @override
@@ -166,7 +174,8 @@ minimumFaces: $minimumFaces,
         tagsEnabled.hashCode ^
         userAvatarColor.hashCode ^
         showSupportBadge.hashCode ^
-        minimumFaces.hashCode;
+        minimumFaces.hashCode ^
+        albumNestingSeparator.hashCode;
   }
 }
 

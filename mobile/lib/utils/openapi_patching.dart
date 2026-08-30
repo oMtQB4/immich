@@ -25,7 +25,7 @@ final Map<String, Map<String, Object?>> openApiPatches = {
     'tags': TagsResponse(enabled: false, sidebarWeb: false).toJson(),
     'sharedLinks': SharedLinksResponse(enabled: true, sidebarWeb: false).toJson(),
     'cast': CastResponse(gCastEnabled: false).toJson(),
-    'albums': {'defaultAssetOrder': 'desc'},
+    'albums': {'defaultAssetOrder': 'desc', 'nestingSeparator': ''},
     'recentlyAdded': RecentlyAddedResponse(sidebarWeb: false).toJson(),
   },
   'ServerConfigDto': {
@@ -41,6 +41,7 @@ final Map<String, Map<String, Object?>> openApiPatches = {
   'SyncAssetV1': {'isEdited': false},
   'ServerFeaturesDto': {'ocr': false, 'realtimeTranscoding': false},
   'MemoriesResponse': {'duration': 5},
+  'AlbumsResponse': {'nestingSeparator': ''},
 };
 
 void upgradeDto(dynamic value, String targetType) {
