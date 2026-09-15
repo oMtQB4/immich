@@ -6,6 +6,7 @@
   import { Route } from '$lib/route';
   import { getAlbumActions } from '$lib/services/album.service';
   import { locale } from '$lib/stores/preferences.store';
+  import { getAlbumDisplayName } from '$lib/utils/tree-utils';
   import { AlbumUserRole, type AlbumResponseDto } from '@immich/sdk';
   import { Icon, menuManager } from '@immich/ui';
   import { mdiShareVariantOutline } from '@mdi/js';
@@ -13,9 +14,12 @@
 
   type Props = {
     album: AlbumResponseDto;
+    nestingSeparator?: string;
   };
 
-  const { album }: Props = $props();
+  const { album, nestingSeparator = '' }: Props = $props();
+
+  const displayName = $derived(getAlbumDisplayName(album.albumName, nestingSeparator));
 
   let contextMenuAnchor: HTMLDivElement | undefined = $state();
   const items = $derived.by(() => {
@@ -47,7 +51,7 @@
   {oncontextmenu}
 >
   <td class="text-md w-8/12 items-center text-start text-ellipsis sm:w-4/12 md:w-4/12 xl:w-[30%] 2xl:w-[40%]">
-    {album.albumName}
+    {displayName}
     {#if album.shared}
       <Icon
         icon={mdiShareVariantOutline}

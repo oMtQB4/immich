@@ -2,6 +2,7 @@
   import AlbumCover from '$lib/components/album-page/AlbumCover.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getShortDateRange } from '$lib/utils/date-time';
+  import { getAlbumDisplayName } from '$lib/utils/tree-utils';
   import { type AlbumResponseDto } from '@immich/sdk';
   import { ContextMenuButton, type MenuItems } from '@immich/ui';
   import { t } from 'svelte-i18n';
@@ -13,6 +14,7 @@
     showItemCount?: boolean;
     preload?: boolean;
     contextMenuItems?: MenuItems;
+    nestingSeparator?: string;
   };
 
   const {
@@ -22,7 +24,10 @@
     showItemCount = false,
     preload = false,
     contextMenuItems,
+    nestingSeparator = '',
   }: Props = $props();
+
+  let displayName = $derived(getAlbumDisplayName(album.albumName, nestingSeparator));
 </script>
 
 <div
@@ -53,7 +58,7 @@
       data-testid="album-name"
       title={album.albumName}
     >
-      {album.albumName}
+      {displayName}
     </p>
 
     {#if showDateRange && album.startDate && album.endDate}
