@@ -25,7 +25,7 @@ final Map<String, Map<String, Object?>> openApiPatches = {
     'tags': TagsResponse(enabled: false, sidebarWeb: false).toJson(),
     'sharedLinks': SharedLinksResponse(enabled: true, sidebarWeb: false).toJson(),
     'cast': CastResponse(gCastEnabled: false).toJson(),
-    'albums': {'defaultAssetOrder': 'desc'},
+    'albums': {'defaultAssetOrder': 'desc', 'nestingSeparator': ''},
     'recentlyAdded': RecentlyAddedResponse(sidebarWeb: false).toJson(),
   },
   'ServerConfigDto': {
@@ -44,6 +44,7 @@ final Map<String, Map<String, Object?>> openApiPatches = {
   'MemoriesResponse': {'duration': 5, 'sidebarWeb': false},
   'PeopleResponse': {'updateStrategy': 'everyone'},
   'PersonResponseDto': {'otherPeople': const [], 'sharedBy': const [], 'sharedWith': const []},
+  'AlbumsResponse': {'nestingSeparator': ''},
   'WorkflowResponseDto': {'logging': false},
 };
 

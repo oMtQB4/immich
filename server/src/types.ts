@@ -567,6 +567,7 @@ export interface SystemMetadata extends Record<SystemMetadataKey, Record<string,
 export type UserPreferences = {
   albums: {
     defaultAssetOrder: AssetOrder;
+    nestingSeparator: string;
   };
   folders: {
     enabled: boolean;

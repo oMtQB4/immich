@@ -16,9 +16,10 @@
   type Props = {
     groupedAlbums: AlbumGroup[];
     albumGroupOption?: string;
+    nestingSeparator?: string;
   };
 
-  const { groupedAlbums, albumGroupOption = AlbumGroupBy.None }: Props = $props();
+  const { groupedAlbums, albumGroupOption = AlbumGroupBy.None, nestingSeparator = '' }: Props = $props();
 </script>
 
 <table class="mt-2 w-full text-start">
@@ -34,7 +35,7 @@
   {#if albumGroupOption === AlbumGroupBy.None}
     <tbody class="block w-full overflow-y-auto rounded-md border dark:border-immich-dark-gray dark:text-immich-dark-fg">
       {#each groupedAlbums[0].albums as album (album.id)}
-        <AlbumTableRow {album} />
+        <AlbumTableRow {album} {nestingSeparator} />
       {/each}
     </tbody>
   {:else}
@@ -68,7 +69,7 @@
           transition:slide={{ duration: 300 }}
         >
           {#each albumGroup.albums as album (album.id)}
-            <AlbumTableRow {album} />
+            <AlbumTableRow {album} {nestingSeparator} />
           {/each}
         </tbody>
       {/if}

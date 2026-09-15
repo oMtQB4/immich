@@ -9,6 +9,7 @@ const getDefaultPreferences = (): UserPreferences => {
   return {
     albums: {
       defaultAssetOrder: AssetOrder.Desc,
+      nestingSeparator: '',
     },
     folders: {
       enabled: false,
