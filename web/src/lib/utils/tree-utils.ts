@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable unicorn/no-this-assignment */
 /* eslint-disable unicorn/prefer-at */
-import type { TagResponseDto } from '@immich/sdk';
+import type { AlbumResponseDto, TagResponseDto } from '@immich/sdk';
 
 export class TreeNode extends Map<string, TreeNode> {
   value: string;
@@ -10,6 +10,7 @@ export class TreeNode extends Map<string, TreeNode> {
   hasAssets: boolean;
   id: string | undefined;
   color: string | undefined;
+  albums: AlbumResponseDto[];
   private _parents: TreeNode[] | undefined;
   private _children: TreeNode[] | undefined;
 
@@ -19,6 +20,7 @@ export class TreeNode extends Map<string, TreeNode> {
     this.parent = parent;
     this.path = path;
     this.hasAssets = false;
+    this.albums = [];
   }
 
   static fromPaths(paths: string[]) {
@@ -26,6 +28,22 @@ export class TreeNode extends Map<string, TreeNode> {
     for (const path of paths) {
       const current = root.add(path);
       current.hasAssets = true;
+    }
+    return root;
+  }
+
+  /**
+   * Builds a virtual folder hierarchy out of flat album names, splitting each name on `separator`.
+   * The trailing segment is the album's own label, so `Vacation/2013-11 USA` with a `/` separator
+   * puts one album inside a single `Vacation` node. Albums without a separator stay at the root.
+   */
+  static fromAlbums(albums: AlbumResponseDto[], separator: string) {
+    const root = new TreeNode('', '', null);
+    for (const album of albums) {
+      const parts = getAlbumNameParts(album.albumName, separator);
+      const node = root.addParts(parts.slice(0, -1));
+      node.albums.push(album);
+      node.hasAssets = true;
     }
     return root;
   }
@@ -92,6 +110,31 @@ export class TreeNode extends Map<string, TreeNode> {
     return current;
   }
 
+  private addParts(parts: string[]) {
+    let current: TreeNode = this;
+    for (const part of parts) {
+      // the map key has to match what `traverse` sees after splitting a path on '/', so album
+      // names containing a literal '/' (possible when another separator is configured) are encoded
+      const key = encodeTreeSegment(part);
+      let next = current.get(key);
+      if (next === undefined) {
+        next = new TreeNode(part, joinPaths(current.path, key), current);
+        current.set(key, next);
+      }
+      current = next;
+    }
+    return current;
+  }
+
+  /** Number of albums at this node and everywhere below it. */
+  get albumCount(): number {
+    let count = this.albums.length;
+    for (const child of this.values()) {
+      count += child.albumCount;
+    }
+    return count;
+  }
+
   get parents(): TreeNode[] {
     if (this._parents) {
       return this._parents;
@@ -109,6 +152,28 @@ export class TreeNode extends Map<string, TreeNode> {
     return (this._children ??= Array.from(this.values()));
   }
 }
+
+const encodeTreeSegment = (segment: string) => segment.replaceAll('/', '%2F');
+
+/**
+ * Splits an album name into its hierarchy segments. Empty segments are dropped so that names like
+ * `Vacation/` or `/USA` do not produce anonymous levels. Returns the whole name as a single segment
+ * when nesting is disabled or the name has no usable segments.
+ */
+export const getAlbumNameParts = (albumName: string, separator: string) => {
+  if (!separator) {
+    return [albumName];
+  }
+
+  const parts = albumName.split(separator).filter((part) => part.length > 0);
+  return parts.length > 0 ? parts : [albumName];
+};
+
+/** The label an album shows when nested, i.e. its name without the parent segments. */
+export const getAlbumDisplayName = (albumName: string, separator: string) => {
+  const parts = getAlbumNameParts(albumName, separator);
+  return parts[parts.length - 1];
+};
 
 export const normalizeTreePath = (path: string) =>
   path.length > 1 && path[path.length - 1] === '/' ? path.slice(0, -1) : path;

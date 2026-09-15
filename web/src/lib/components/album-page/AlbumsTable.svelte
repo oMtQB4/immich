@@ -19,9 +19,15 @@
     groupedAlbums: AlbumGroup[];
     albumGroupOption?: string;
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
+    nestingSeparator?: string;
   }
 
-  let { groupedAlbums, albumGroupOption = AlbumGroupBy.None, onShowContextMenu }: Props = $props();
+  let {
+    groupedAlbums,
+    albumGroupOption = AlbumGroupBy.None,
+    onShowContextMenu,
+    nestingSeparator = '',
+  }: Props = $props();
 </script>
 
 <table class="mt-2 w-full text-start">
@@ -37,7 +43,7 @@
   {#if albumGroupOption === AlbumGroupBy.None}
     <tbody class="block w-full overflow-y-auto rounded-md border dark:border-immich-dark-gray dark:text-immich-dark-fg">
       {#each groupedAlbums[0].albums as album (album.id)}
-        <AlbumTableRow {album} {onShowContextMenu} />
+        <AlbumTableRow {album} {onShowContextMenu} {nestingSeparator} />
       {/each}
     </tbody>
   {:else}
@@ -71,7 +77,7 @@
           transition:slide={{ duration: 300 }}
         >
           {#each albumGroup.albums as album (album.id)}
-            <AlbumTableRow {album} {onShowContextMenu} />
+            <AlbumTableRow {album} {onShowContextMenu} {nestingSeparator} />
           {/each}
         </tbody>
       {/if}

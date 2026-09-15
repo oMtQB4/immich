@@ -3,6 +3,7 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getContextMenuPositionFromEvent, type ContextMenuPosition } from '$lib/utils/context-menu';
   import { getShortDateRange } from '$lib/utils/date-time';
+  import { getAlbumDisplayName } from '$lib/utils/tree-utils';
   import { type AlbumResponseDto } from '@immich/sdk';
   import { IconButton } from '@immich/ui';
   import { mdiDotsVertical } from '@mdi/js';
@@ -15,6 +16,7 @@
     showItemCount?: boolean;
     preload?: boolean;
     onShowContextMenu?: ((position: ContextMenuPosition) => unknown) | undefined;
+    nestingSeparator?: string;
   }
 
   let {
@@ -24,7 +26,10 @@
     showItemCount = false,
     preload = false,
     onShowContextMenu,
+    nestingSeparator = '',
   }: Props = $props();
+
+  let displayName = $derived(getAlbumDisplayName(album.albumName, nestingSeparator));
 
   const showAlbumContextMenu = (e: MouseEvent) => {
     e.stopPropagation();
@@ -64,7 +69,7 @@
       data-testid="album-name"
       title={album.albumName}
     >
-      {album.albumName}
+      {displayName}
     </p>
 
     {#if showDateRange && album.startDate && album.endDate}

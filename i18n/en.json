@@ -541,6 +541,8 @@
   "albums_default_sort_order": "Default album sort order",
   "albums_default_sort_order_description": "Initial asset sort order when creating new albums.",
   "albums_feature_description": "Collections of assets that can be shared with other users.",
+  "albums_nesting_separator": "Nested album separator",
+  "albums_nesting_separator_description": "Single character that splits album names into nested groups, e.g. \"/\" shows \"Vacation/2013-11 USA\" inside a \"Vacation\" group. Leave empty to show a flat list.",
   "albums_on_device_count": "Albums on device ({count})",
   "all": "All",
   "all_albums": "All albums",
