@@ -18,10 +18,12 @@ import 'package:immich_mobile/providers/asset_viewer/asset_viewer.provider.dart'
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/asset.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/settings.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/user_metadata.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/album_filter.utils.dart';
+import 'package:immich_mobile/utils/album_tree.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/search_field.dart';
@@ -49,6 +51,9 @@ class _AlbumSelectorState extends ConsumerState<AlbumSelector> {
 
   AlbumFilter filter = const AlbumFilter(query: "", mode: QuickFilterMode.all);
   AlbumSort sort = const AlbumSort(mode: AlbumSortMode.lastModified, isReverse: true);
+
+  /// Segments of the virtual album folder the user has drilled into.
+  List<String> nestingPath = const [];
 
   @override
   void initState() {
@@ -97,9 +102,22 @@ class _AlbumSelectorState extends ConsumerState<AlbumSelector> {
   void changeFilter(QuickFilterMode mode) {
     setState(() {
       filter = filter.copyWith(mode: mode);
+      nestingPath = const [];
     });
 
     unawaited(filterAlbums());
+  }
+
+  void openNestedAlbumFolder(String segment) {
+    setState(() {
+      nestingPath = [...nestingPath, segment];
+    });
+  }
+
+  void navigateToNestingPath(List<String> path) {
+    setState(() {
+      nestingPath = path;
+    });
   }
 
   Future<void> changeSort(AlbumSort sort) async {
@@ -177,11 +195,24 @@ class _AlbumSelectorState extends ConsumerState<AlbumSelector> {
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(currentUserProvider.select((user) => user?.id));
+    final separator = ref.watch(
+      userMetadataPreferencesProvider.select((value) => value.valueOrNull?.albumNestingSeparator ?? ''),
+    );
 
     // refilter and sort when albums change
     ref.listen(remoteAlbumProvider.select((state) => state.albums), (_, _) async {
       await sortAlbums();
     });
+
+    // Searching looks across every album, so nesting is suspended while a query is active and
+    // matches are shown with their full names instead.
+    final searching = filter.query?.isNotEmpty ?? false;
+    final nestingActive = separator.isNotEmpty && !searching;
+    final tree = nestingActive ? AlbumTreeNode.build(shownAlbums, separator) : null;
+    // a folder can disappear while the user is inside it, so re-resolve the path every build
+    final resolvedPath = tree?.resolvePath(nestingPath) ?? const <String>[];
+    final currentNode = tree?.traverse(resolvedPath);
+    final visibleAlbums = currentNode?.albums ?? shownAlbums;
 
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -210,9 +241,25 @@ class _AlbumSelectorState extends ConsumerState<AlbumSelector> {
             currentSortMode: sort.mode,
             currentIsReverse: sort.isReverse,
           ),
+          if (currentNode != null) ...[
+            if (resolvedPath.isNotEmpty) _AlbumBreadcrumbs(path: resolvedPath, onNavigate: navigateToNestingPath),
+            _AlbumFolders(folders: currentNode.childNodes, onFolderSelected: openNestedAlbumFolder),
+          ],
           isGrid
-              ? _AlbumGrid(albums: shownAlbums, userId: userId, onAlbumSelected: widget.onAlbumSelected)
-              : _AlbumList(albums: shownAlbums, userId: userId, onAlbumSelected: widget.onAlbumSelected),
+              ? _AlbumGrid(
+                  albums: visibleAlbums,
+                  userId: userId,
+                  onAlbumSelected: widget.onAlbumSelected,
+                  nestingSeparator: nestingActive ? separator : '',
+                  hideEmptyMessage: currentNode?.children.isNotEmpty ?? false,
+                )
+              : _AlbumList(
+                  albums: visibleAlbums,
+                  userId: userId,
+                  onAlbumSelected: widget.onAlbumSelected,
+                  nestingSeparator: nestingActive ? separator : '',
+                  hideEmptyMessage: currentNode?.children.isNotEmpty ?? false,
+                ),
         ],
       ),
     );
@@ -559,15 +606,29 @@ class _QuickSortAndViewMode extends StatelessWidget {
 }
 
 class _AlbumList extends ConsumerWidget {
-  const _AlbumList({required this.albums, required this.userId, required this.onAlbumSelected});
+  const _AlbumList({
+    required this.albums,
+    required this.userId,
+    required this.onAlbumSelected,
+    this.nestingSeparator = '',
+    this.hideEmptyMessage = false,
+  });
 
   final List<RemoteAlbum> albums;
   final String? userId;
   final AlbumSelectorCallback onAlbumSelected;
+  final String nestingSeparator;
+
+  /// Suppresses the "nothing found" message when the level still shows sub-folders.
+  final bool hideEmptyMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (albums.isEmpty) {
+      if (hideEmptyMessage) {
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      }
+
       return SliverToBoxAdapter(
         child: Center(
           child: Padding(padding: const EdgeInsets.all(20.0), child: Text(context.t.album_search_not_found)),
@@ -608,13 +669,23 @@ class _AlbumList extends ConsumerWidget {
                 onDismissed: (direction) async {
                   await ref.read(remoteAlbumProvider.notifier).deleteAlbum(album.id);
                 },
-                child: AlbumTile(album: album, isOwner: isOwner, onAlbumSelected: onAlbumSelected),
+                child: AlbumTile(
+                  album: album,
+                  isOwner: isOwner,
+                  onAlbumSelected: onAlbumSelected,
+                  nestingSeparator: nestingSeparator,
+                ),
               ),
             );
           } else {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: AlbumTile(album: album, isOwner: isOwner, onAlbumSelected: onAlbumSelected),
+              child: AlbumTile(
+                album: album,
+                isOwner: isOwner,
+                onAlbumSelected: onAlbumSelected,
+                nestingSeparator: nestingSeparator,
+              ),
             );
           }
         },
@@ -625,15 +696,29 @@ class _AlbumList extends ConsumerWidget {
 }
 
 class _AlbumGrid extends StatelessWidget {
-  const _AlbumGrid({required this.albums, required this.userId, required this.onAlbumSelected});
+  const _AlbumGrid({
+    required this.albums,
+    required this.userId,
+    required this.onAlbumSelected,
+    this.nestingSeparator = '',
+    this.hideEmptyMessage = false,
+  });
 
   final List<RemoteAlbum> albums;
   final String? userId;
   final AlbumSelectorCallback onAlbumSelected;
+  final String nestingSeparator;
+
+  /// Suppresses the "nothing found" message when the level still shows sub-folders.
+  final bool hideEmptyMessage;
 
   @override
   Widget build(BuildContext context) {
     if (albums.isEmpty) {
+      if (hideEmptyMessage) {
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      }
+
       return SliverToBoxAdapter(
         child: Center(
           child: Padding(padding: const EdgeInsets.all(20.0), child: Text(context.t.album_search_not_found)),
@@ -652,7 +737,12 @@ class _AlbumGrid extends StatelessWidget {
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
           final album = albums[index];
-          return _GridAlbumCard(album: album, userId: userId, onAlbumSelected: onAlbumSelected);
+          return _GridAlbumCard(
+            album: album,
+            userId: userId,
+            onAlbumSelected: onAlbumSelected,
+            nestingSeparator: nestingSeparator,
+          );
         }, childCount: albums.length),
       ),
     );
@@ -660,11 +750,17 @@ class _AlbumGrid extends StatelessWidget {
 }
 
 class _GridAlbumCard extends ConsumerWidget {
-  const _GridAlbumCard({required this.album, required this.userId, required this.onAlbumSelected});
+  const _GridAlbumCard({
+    required this.album,
+    required this.userId,
+    required this.onAlbumSelected,
+    this.nestingSeparator = '',
+  });
 
   final RemoteAlbum album;
   final String? userId;
   final AlbumSelectorCallback onAlbumSelected;
+  final String nestingSeparator;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -716,7 +812,7 @@ class _GridAlbumCard extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      album.name,
+                      albumDisplayName(album.name, nestingSeparator),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -858,6 +954,99 @@ class CreateAlbumButton extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Path of the virtual album folder the user has drilled into, with every level tappable.
+class _AlbumBreadcrumbs extends StatelessWidget {
+  const _AlbumBreadcrumbs({required this.path, required this.onNavigate});
+
+  final List<String> path;
+  final void Function(List<String>) onNavigate;
+
+  @override
+  Widget build(BuildContext context) {
+    final crumbs = <Widget>[TextButton(onPressed: () => onNavigate(const []), child: Text(context.t.albums))];
+
+    for (var index = 0; index < path.length; index++) {
+      final isLast = index == path.length - 1;
+      final target = path.sublist(0, index + 1);
+      crumbs.add(Icon(Icons.chevron_right, size: 16, color: context.colorScheme.onSurfaceSecondary));
+      crumbs.add(
+        TextButton(
+          onPressed: isLast ? null : () => onNavigate(target),
+          child: Text(
+            path[index],
+            style: isLast ? TextStyle(color: context.colorScheme.onSurface, fontWeight: FontWeight.w600) : null,
+          ),
+        ),
+      );
+    }
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => onNavigate(path.sublist(0, path.length - 1)),
+              icon: const Icon(Icons.arrow_upward_rounded),
+              tooltip: context.t.back,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                child: Row(children: crumbs),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The sub-folders available at the current level of the album hierarchy.
+class _AlbumFolders extends StatelessWidget {
+  const _AlbumFolders({required this.folders, required this.onFolderSelected});
+
+  final List<AlbumTreeNode> folders;
+  final void Function(String) onFolderSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (folders.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      sliver: SliverList.separated(
+        itemCount: folders.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 4),
+        itemBuilder: (_, index) {
+          final folder = folders[index];
+          return ListTile(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+            tileColor: context.colorScheme.surfaceContainer,
+            leading: Icon(Icons.folder_rounded, color: context.colorScheme.primary),
+            title: Text(
+              folder.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              context.t.albums_count(count: folder.albumCount),
+              style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceSecondary),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => onFolderSelected(folder.name),
+          );
+        },
       ),
     );
   }
