@@ -1,0 +1,106 @@
+name: Build custom server image
+
+# Builds the immich-server image (server + web) from this fork and pushes it to this
+# repository's GitHub Packages (GHCR). The machine learning image is not built here:
+# nothing in this fork changes it, so keep using the official one.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Target platform(s). arm64 builds run under QEMU and are slow.
+        type: choice
+        default: linux/amd64
+        options:
+          - linux/amd64
+          - linux/arm64
+          - linux/amd64,linux/arm64
+  push:
+    branches:
+      - 'nested-albums-*'
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build and push server image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image name and version
+        id: image
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          # GHCR rejects uppercase in image names, but GitHub owners may contain it
+          owner=$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')
+          echo "name=ghcr.io/${owner}/immich-server" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r '.version' server/package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate docker image tags
+        id: metadata
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          flavor: |
+            latest=false
+          images: |
+            name=${{ steps.image.outputs.name }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=${{ steps.image.outputs.version }}-${{ github.run_number }}
+            type=sha
+
+      - name: Build and push image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: server/Dockerfile
+          platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          build-args: |
+            BUILD_ID=${{ github.run_id }}
+            BUILD_IMAGE=${{ steps.image.outputs.version }}-${{ github.run_number }}
+            BUILD_SOURCE_REF=${{ github.ref_name }}
+            BUILD_SOURCE_COMMIT=${{ github.sha }}
+
+      - name: Summarise published tags
+        env:
+          TAGS: ${{ steps.metadata.outputs.tags }}
+        run: |
+          {
+            echo '### Published image tags'
+            echo
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+            echo
+            echo 'Pull the immutable tag on your server, then restart:'
+            echo
+            echo '```bash'
+            echo "docker compose pull immich-server && docker compose up -d"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
