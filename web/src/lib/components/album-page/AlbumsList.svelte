@@ -1,6 +1,8 @@
 <script lang="ts">
   import AlbumCardGroup from '#lib/components/album-page/AlbumCardGroup.svelte';
   import AlbumsTable from '#lib/components/album-page/AlbumsTable.svelte';
+  import TreeBreadcrumbs from '#lib/components/shared-components/tree/TreeBreadcrumbs.svelte';
+  import TreeItemThumbnails from '#lib/components/shared-components/tree/TreeItemThumbnails.svelte';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { handleDeleteAlbum, isAlbumOwner } from '#lib/services/album.service.ts';
   import {
@@ -19,7 +21,10 @@
     type AlbumGroup,
   } from '#lib/utils/album-utils.ts';
   import { normalizeSearchString } from '#lib/utils/string-utils.ts';
+  import { TreeNode } from '#lib/utils/tree-utils.ts';
   import { type AlbumResponseDto } from '@immich/sdk';
+  import { mdiFolderMultipleImage, mdiImageAlbum } from '@mdi/js';
+  import { goto } from '$app/navigation';
   import { groupBy } from 'lodash-es';
   import { onMount, type Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -32,6 +37,9 @@
     allowEdit?: boolean;
     showOwner?: boolean;
     albumGroupIds?: string[];
+    nestingSeparator?: string;
+    nestingPath?: string;
+    getNestingLink?: (path: string) => string;
     empty?: Snippet;
   }
 
@@ -44,6 +52,9 @@
     showOwner = false,
     // eslint-disable-next-line no-useless-assignment
     albumGroupIds = $bindable([]),
+    nestingSeparator = '',
+    nestingPath = '',
+    getNestingLink,
     empty,
   }: Props = $props();
 
@@ -143,10 +154,16 @@
       : albums,
   );
 
+  // search spans the whole library, so it flattens the tree
+  let nestingActive = $derived(!!nestingSeparator && !!getNestingLink && !normalizedSearchQuery);
+  let albumTree = $derived(nestingActive ? TreeNode.fromAlbums(filteredAlbums, nestingSeparator) : undefined);
+  let currentNode = $derived(albumTree && nestingPath ? albumTree.traverse(nestingPath) : albumTree);
+  let visibleAlbums = $derived(currentNode ? currentNode.albums : filteredAlbums);
+
   let albumGroupOption = $derived(getSelectedAlbumGroupOption(userSettings));
   let groupedAlbums = $derived.by(() => {
     const groupFunc = groupOptions[albumGroupOption] ?? groupOptions[AlbumGroupBy.None];
-    const groupedAlbums = groupFunc(stringToSortOrder(userSettings.groupOrder), filteredAlbums);
+    const groupedAlbums = groupFunc(stringToSortOrder(userSettings.groupOrder), visibleAlbums);
 
     return groupedAlbums.map((group) => ({
       id: group.id,
@@ -172,19 +189,45 @@
   };
 </script>
 
+{#if currentNode && getNestingLink}
+  {#if currentNode.parent}
+    <TreeBreadcrumbs node={currentNode} icon={mdiImageAlbum} title={$t('albums')} getLink={getNestingLink} />
+  {/if}
+
+  <TreeItemThumbnails
+    items={currentNode.children}
+    icon={mdiFolderMultipleImage}
+    getCount={(node) => node.albumCount}
+    onClick={(node) => goto(getNestingLink(node.path))}
+  />
+{/if}
+
 {#if albums.length > 0}
   {#if userSettings.view === AlbumViewMode.Cover}
     <!-- Album Cards -->
     {#if albumGroupOption === AlbumGroupBy.None}
-      <AlbumCardGroup albums={groupedAlbums[0].albums} {showOwner} showDateRange showItemCount />
+      <AlbumCardGroup
+        albums={groupedAlbums[0].albums}
+        nestingSeparator={nestingActive ? nestingSeparator : ''}
+        {showOwner}
+        showDateRange
+        showItemCount
+      />
     {:else}
       {#each groupedAlbums as albumGroup (albumGroup.id)}
-        <AlbumCardGroup albums={albumGroup.albums} group={albumGroup} {showOwner} showDateRange showItemCount />
+        <AlbumCardGroup
+          albums={albumGroup.albums}
+          group={albumGroup}
+          nestingSeparator={nestingActive ? nestingSeparator : ''}
+          {showOwner}
+          showDateRange
+          showItemCount
+        />
       {/each}
     {/if}
   {:else if userSettings.view === AlbumViewMode.List}
     <!-- Album Table -->
-    <AlbumsTable {groupedAlbums} {albumGroupOption} />
+    <AlbumsTable {groupedAlbums} {albumGroupOption} nestingSeparator={nestingActive ? nestingSeparator : ''} />
   {/if}
 {:else}
   <!-- Empty Message -->

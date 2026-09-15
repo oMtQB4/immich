@@ -25,7 +25,7 @@
   import { getAssetBulkActions } from '#lib/services/asset.service.ts';
   import { isAssetViewerRoute } from '#lib/utils/navigation.ts';
   import { toTimelineAsset } from '#lib/utils/timeline-util.ts';
-  import { joinPaths } from '#lib/utils/tree-utils.ts';
+  import type { TreeNode } from '#lib/utils/tree-utils.ts';
   import { ActionButton, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
   import { mdiDotsVertical, mdiFolder, mdiFolderHome, mdiFolderOutline, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
@@ -45,7 +45,7 @@
   let folderScrollContainer: HTMLElement | undefined = $state();
   let savedScrollTop = 0;
 
-  const handleNavigateToFolder = (folderName: string) => navigateToView(joinPaths(data.tree.path, folderName));
+  const handleNavigateToFolder = (folder: TreeNode) => navigateToView(folder.path);
 
   const getLinkForPath = (path: string) => Route.folders({ path });
 
