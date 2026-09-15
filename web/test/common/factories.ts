@@ -55,7 +55,7 @@ const random = new SeededRandom(7);
 
 const names = ['Alice Johnson', 'Bob Smith', 'Charlie Brown', 'Diana Prince', 'Eve Adams', 'Frank Castle'];
 const preferences = (overrides: Partial<UserPreferencesResponseDto> = {}): UserPreferencesResponseDto => ({
-  albums: { defaultAssetOrder: AssetOrder.Desc },
+  albums: { defaultAssetOrder: AssetOrder.Desc, nestingSeparator: '' },
   cast: { gCastEnabled: false },
   download: { archiveSize: 4_294_967_296, includeEmbeddedVideos: false },
   emailNotifications: { albumInvite: true, albumUpdate: true, enabled: true },

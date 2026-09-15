@@ -20420,10 +20420,16 @@
         "properties": {
           "defaultAssetOrder": {
             "$ref": "#/components/schemas/AssetOrder"
+          },
+          "nestingSeparator": {
+            "description": "Character that splits album names into nested groups, empty to disable",
+            "maxLength": 1,
+            "type": "string"
           }
         },
         "required": [
-          "defaultAssetOrder"
+          "defaultAssetOrder",
+          "nestingSeparator"
         ],
         "type": "object"
       },
@@ -20432,6 +20438,11 @@
         "properties": {
           "defaultAssetOrder": {
             "$ref": "#/components/schemas/AssetOrder"
+          },
+          "nestingSeparator": {
+            "description": "Character that splits album names into nested groups, empty to disable",
+            "maxLength": 1,
+            "type": "string"
           }
         },
         "type": "object"

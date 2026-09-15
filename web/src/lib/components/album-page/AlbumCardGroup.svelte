@@ -18,6 +18,7 @@
     showOwner?: boolean;
     showDateRange?: boolean;
     showItemCount?: boolean;
+    nestingSeparator?: string;
   };
 
   const {
@@ -26,6 +27,7 @@
     showOwner = false,
     showDateRange = false,
     showItemCount = false,
+    nestingSeparator = '',
   }: Props = $props();
 
   let isCollapsed = $derived(!!group && isAlbumGroupCollapsed($albumViewSettings, group.id));
@@ -76,6 +78,7 @@
         >
           <AlbumCard
             {album}
+            {nestingSeparator}
             {showOwner}
             {showDateRange}
             {showItemCount}

@@ -7,13 +7,23 @@ import 'package:immich_mobile/generated/translations.g.dart';
 import 'package:immich_mobile/pages/common/large_leading_tile.dart';
 import 'package:immich_mobile/presentation/widgets/images/thumbnail.widget.dart';
 import 'package:immich_mobile/providers/infrastructure/asset.provider.dart';
+import 'package:immich_mobile/utils/album_tree.dart';
 
 class AlbumTile extends ConsumerWidget {
-  const AlbumTile({super.key, required this.album, required this.isOwner, this.onAlbumSelected});
+  const AlbumTile({
+    super.key,
+    required this.album,
+    required this.isOwner,
+    this.onAlbumSelected,
+    this.nestingSeparator = '',
+  });
 
   final RemoteAlbum album;
   final bool isOwner;
   final Function(RemoteAlbum)? onAlbumSelected;
+
+  /// When set, the album is labelled with its last name segment instead of its full name.
+  final String nestingSeparator;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +31,7 @@ class AlbumTile extends ConsumerWidget {
 
     return LargeLeadingTile(
       title: Text(
-        album.name,
+        albumDisplayName(album.name, nestingSeparator),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),

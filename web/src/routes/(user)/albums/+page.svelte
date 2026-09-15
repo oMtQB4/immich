@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { scrollMemory } from '#lib/actions/scroll-memory.svelte.ts';
   import Albums from '#lib/components/album-page/AlbumsList.svelte';
   import UserPageLayout from '#lib/components/layouts/UserPageLayout.svelte';
   import EmptyPlaceholder from '#lib/components/shared-components/EmptyPlaceholder.svelte';
   import GroupTab from '#lib/elements/GroupTab.svelte';
   import SearchBar from '#lib/elements/SearchBar.svelte';
+  import { QueryParameter } from '#lib/constants.ts';
+  import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { getAllAlbumsQuery } from '#lib/queries/album.query.ts';
   import { createPreloadedQuery } from '#lib/queries/client.ts';
   import { Route } from '#lib/route.ts';
@@ -27,6 +30,11 @@
 
   let searchQuery = $state('');
   let albumGroups: string[] = $state([]);
+
+  let nestingSeparator = $derived(authManager.preferences.albums?.nestingSeparator ?? '');
+  let nestingPath = $derived(page.url.searchParams.get(QueryParameter.PATH) ?? '');
+
+  const getNestingLink = (path: string) => Route.albums({ path });
 </script>
 
 <UserPageLayout title={data.meta.title} {@attach scrollMemory({ routeStartsWith: Route.albums() })}>
@@ -56,6 +64,9 @@
     userSettings={$albumViewSettings}
     allowEdit
     {searchQuery}
+    {nestingSeparator}
+    {nestingPath}
+    {getNestingLink}
     bind:albumGroupIds={albumGroups}
   >
     {#snippet empty()}
