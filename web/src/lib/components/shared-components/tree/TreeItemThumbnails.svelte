@@ -5,10 +5,12 @@
   interface Props {
     items: TreeNode[];
     icon: string;
-    onClick: (path: string) => void;
+    onClick: (item: TreeNode) => void;
+    /** Optional count rendered under the label, e.g. the number of albums below a node. */
+    getCount?: (item: TreeNode) => number;
   }
 
-  let { items, icon, onClick }: Props = $props();
+  let { items, icon, onClick, getCount }: Props = $props();
 </script>
 
 {#if items.length > 0}
@@ -19,7 +21,7 @@
     {#each items as item}
       <button
         class="flex flex-col place-items-center gap-2 rounded-xl px-4 py-2 hover:bg-immich-primary/10 dark:hover:bg-immich-primary/40"
-        onclick={() => onClick(item.value)}
+        onclick={() => onClick(item)}
         title={item.value}
         type="button"
       >
@@ -27,6 +29,9 @@
         <p class="w-full overflow-clip text-sm text-nowrap text-ellipsis whitespace-pre-wrap dark:text-gray-200">
           {item.value}
         </p>
+        {#if getCount}
+          <p class="text-xs text-gray-500 dark:text-gray-400">{getCount(item)}</p>
+        {/if}
       </button>
     {/each}
   </div>
