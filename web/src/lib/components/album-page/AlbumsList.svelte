@@ -166,8 +166,7 @@
       : albums,
   );
 
-  // Searching looks across the whole library, so nesting is suspended while a query is active and
-  // matches are shown with their full names instead.
+  // search spans the whole library, so it flattens the tree
   let nestingActive = $derived(!!nestingSeparator && !!getNestingLink && !normalizedSearchQuery);
   let albumTree = $derived(nestingActive ? TreeNode.fromAlbums(filteredAlbums, nestingSeparator) : undefined);
   let currentNode = $derived(albumTree && nestingPath ? albumTree.traverse(nestingPath) : albumTree);
