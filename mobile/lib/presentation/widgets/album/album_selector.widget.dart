@@ -200,12 +200,11 @@ class _AlbumSelectorState extends ConsumerState<AlbumSelector> {
       await sortAlbums();
     });
 
-    // Searching looks across every album, so nesting is suspended while a query is active and
-    // matches are shown with their full names instead.
+    // search spans every album, so it flattens the tree
     final searching = filter.query?.isNotEmpty ?? false;
     final nestingActive = separator.isNotEmpty && !searching;
     final tree = nestingActive ? AlbumTreeNode.build(shownAlbums, separator) : null;
-    // a folder can disappear while the user is inside it, so re-resolve the path every build
+    // a folder can disappear while the user is inside it
     final resolvedPath = tree?.resolvePath(nestingPath) ?? const <String>[];
     final currentNode = tree?.traverse(resolvedPath);
     final visibleAlbums = currentNode?.albums ?? shownAlbums;
@@ -615,7 +614,6 @@ class _AlbumList extends ConsumerWidget {
   final AlbumSelectorCallback onAlbumSelected;
   final String nestingSeparator;
 
-  /// Suppresses the "nothing found" message when the level still shows sub-folders.
   final bool hideEmptyMessage;
 
   @override
@@ -705,7 +703,6 @@ class _AlbumGrid extends StatelessWidget {
   final AlbumSelectorCallback onAlbumSelected;
   final String nestingSeparator;
 
-  /// Suppresses the "nothing found" message when the level still shows sub-folders.
   final bool hideEmptyMessage;
 
   @override
@@ -955,7 +952,6 @@ class CreateAlbumButton extends ConsumerWidget {
   }
 }
 
-/// Path of the virtual album folder the user has drilled into, with every level tappable.
 class _AlbumBreadcrumbs extends StatelessWidget {
   const _AlbumBreadcrumbs({required this.path, required this.onNavigate});
 
@@ -1005,7 +1001,6 @@ class _AlbumBreadcrumbs extends StatelessWidget {
   }
 }
 
-/// The sub-folders available at the current level of the album hierarchy.
 class _AlbumFolders extends StatelessWidget {
   const _AlbumFolders({required this.folders, required this.onFolderSelected});
 

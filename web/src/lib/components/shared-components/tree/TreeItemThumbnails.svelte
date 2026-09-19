@@ -6,7 +6,6 @@
     items: TreeNode[];
     icon: string;
     onClick: (item: TreeNode) => void;
-    /** Optional count rendered under the label, e.g. the number of albums below a node. */
     getCount?: (item: TreeNode) => number;
   }
 
