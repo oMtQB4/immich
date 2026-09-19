@@ -32,11 +32,6 @@ export class TreeNode extends Map<string, TreeNode> {
     return root;
   }
 
-  /**
-   * Builds a virtual folder hierarchy out of flat album names, splitting each name on `separator`.
-   * The trailing segment is the album's own label, so `Vacation/2013-11 USA` with a `/` separator
-   * puts one album inside a single `Vacation` node. Albums without a separator stay at the root.
-   */
   static fromAlbums(albums: AlbumResponseDto[], separator: string) {
     const root = new TreeNode('', '', null);
     for (const album of albums) {
@@ -115,8 +110,7 @@ export class TreeNode extends Map<string, TreeNode> {
   private addParts(parts: string[]) {
     let current: TreeNode = this;
     for (const part of parts) {
-      // the map key has to match what `traverse` sees after splitting a path on '/', so album
-      // names containing a literal '/' (possible when another separator is configured) are encoded
+      // keys must match what traverse() sees after splitting on '/'
       const key = encodeTreeSegment(part);
       let next = current.get(key);
       if (next === undefined) {
@@ -128,7 +122,6 @@ export class TreeNode extends Map<string, TreeNode> {
     return current;
   }
 
-  /** Number of albums at this node and everywhere below it. */
   get albumCount(): number {
     let count = this.albums.length;
     for (const child of this.values()) {
@@ -157,11 +150,6 @@ export class TreeNode extends Map<string, TreeNode> {
 
 const encodeTreeSegment = (segment: string) => segment.replaceAll('/', '%2F');
 
-/**
- * Splits an album name into its hierarchy segments. Empty segments are dropped so that names like
- * `Vacation/` or `/USA` do not produce anonymous levels. Returns the whole name as a single segment
- * when nesting is disabled or the name has no usable segments.
- */
 export const getAlbumNameParts = (albumName: string, separator: string) => {
   if (!separator) {
     return [albumName];
@@ -171,7 +159,6 @@ export const getAlbumNameParts = (albumName: string, separator: string) => {
   return parts.length > 0 ? parts : [albumName];
 };
 
-/** The label an album shows when nested, i.e. its name without the parent segments. */
 export const getAlbumDisplayName = (albumName: string, separator: string) => {
   const parts = getAlbumNameParts(albumName, separator);
   return parts[parts.length - 1];
