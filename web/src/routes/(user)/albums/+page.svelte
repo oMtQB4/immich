@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { scrollMemory } from '#lib/actions/scroll-memory.svelte.ts';
   import Albums from '#lib/components/album-page/AlbumsList.svelte';
   import UserPageLayout from '#lib/components/layouts/UserPageLayout.svelte';
   import EmptyPlaceholder from '#lib/components/shared-components/EmptyPlaceholder.svelte';
+  import { QueryParameter } from '#lib/constants.ts';
   import GroupTab from '#lib/elements/GroupTab.svelte';
   import SearchBar from '#lib/elements/SearchBar.svelte';
-  import { QueryParameter } from '#lib/constants.ts';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { getAllAlbumsQuery } from '#lib/queries/album.query.ts';
   import { createPreloadedQuery } from '#lib/queries/client.ts';
@@ -14,6 +13,7 @@
   import { AlbumFilter, albumViewSettings } from '#lib/stores/preferences.store.ts';
   import { createAlbumAndRedirect } from '#lib/utils/album-utils.ts';
   import { t } from 'svelte-i18n';
+  import { page } from '$app/state';
   import type { PageData } from './$types';
   import AlbumsControls from './AlbumsControls.svelte';
 
