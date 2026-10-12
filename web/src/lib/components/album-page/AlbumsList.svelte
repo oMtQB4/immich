@@ -24,10 +24,10 @@
   import { TreeNode } from '#lib/utils/tree-utils.ts';
   import { type AlbumResponseDto } from '@immich/sdk';
   import { mdiFolderMultipleImage, mdiImageAlbum } from '@mdi/js';
-  import { goto } from '$app/navigation';
   import { groupBy } from 'lodash-es';
   import { onMount, type Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
+  import { goto } from '$app/navigation';
 
   interface Props {
     ownedAlbums?: AlbumResponseDto[];

@@ -1,6 +1,6 @@
+import { factory } from '#test/unit/factories.ts';
 import { describe, expect, it } from 'vitest';
-import { albumFactory } from '@test-data/factories/album-factory';
-import { getAlbumDisplayName, getAlbumNameParts, TreeNode } from './tree-utils';
+import { TreeNode, getAlbumDisplayName, getAlbumNameParts } from './tree-utils.ts';
 
 describe('getAlbumNameParts', () => {
   it('returns the whole name when nesting is disabled', () => {
@@ -35,10 +35,10 @@ describe('getAlbumDisplayName', () => {
 
 describe('TreeNode.fromAlbums', () => {
   const albums = [
-    albumFactory.build({ albumName: 'Urlaube/2013-11 USA' }),
-    albumFactory.build({ albumName: 'Urlaube/2016-07 Italien' }),
-    albumFactory.build({ albumName: 'Urlaube/Kurztrips/2019 Norwegen' }),
-    albumFactory.build({ albumName: 'Familie' }),
+    factory.album({ albumName: 'Urlaube/2013-11 USA' }),
+    factory.album({ albumName: 'Urlaube/2016-07 Italien' }),
+    factory.album({ albumName: 'Urlaube/Kurztrips/2019 Norwegen' }),
+    factory.album({ albumName: 'Familie' }),
   ];
 
   it('keeps albums without a separator at the root', () => {
@@ -75,8 +75,8 @@ describe('TreeNode.fromAlbums', () => {
   });
 
   it('keeps names containing a slash addressable under a different separator', () => {
-    const root = TreeNode.fromAlbums([albumFactory.build({ albumName: 'A/B-2019' })], '-');
-    const node = root.children[0];
+    const root = TreeNode.fromAlbums([factory.album({ albumName: 'A/B-2019' })], '-');
+    const [node] = root.children;
 
     expect(node.value).toBe('A/B');
     expect(node.albums).toHaveLength(1);
