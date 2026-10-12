@@ -2,7 +2,7 @@
   import AlbumCardGroup from '$lib/components/album-page/AlbumCardGroup.svelte';
   import AlbumsTable from '$lib/components/album-page/AlbumsTable.svelte';
   import OnEvents from '$lib/components/OnEvents.svelte';
-  import Breadcrumbs from '$lib/components/shared-components/tree/Breadcrumbs.svelte';
+  import TreeBreadcrumbs from '$lib/components/shared-components/tree/TreeBreadcrumbs.svelte';
   import TreeItemThumbnails from '$lib/components/shared-components/tree/TreeItemThumbnails.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { handleDeleteAlbum, isAlbumOwner } from '$lib/services/album.service';
@@ -214,7 +214,7 @@
 
 {#if currentNode && getNestingLink}
   {#if currentNode.parent}
-    <Breadcrumbs node={currentNode} icon={mdiImageAlbum} title={$t('albums')} getLink={getNestingLink} />
+    <TreeBreadcrumbs node={currentNode} icon={mdiImageAlbum} title={$t('albums')} getLink={getNestingLink} />
   {/if}
 
   <TreeItemThumbnails
